@@ -27,8 +27,20 @@ def index_articles():
 
 @app.route('/articles/<int:id>')
 def show_article(id):
-    pass
+    # Step 1: first visit ever? start the counter at 0
+    session['page_views'] = session.get('page_views') or 0
 
+    # Step 2: count this request
+    session['page_views'] += 1
+
+    # Step 3: 3 or fewer views -> send the article, otherwise block with a 401
+    if session['page_views'] <= 3:
+        article = db.session.get(Article, id)
+        if not article:
+            return {'message': 'Article not found'}, 404
+        return ArticleSchema().dump(article), 200
+
+    return {'message': 'Maximum pageview limit reached'}, 401
 
 if __name__ == '__main__':
     app.run(port=5555)
